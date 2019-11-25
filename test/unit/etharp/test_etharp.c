@@ -2,10 +2,8 @@
 
 #include "lwip/udp.h"
 #include "lwip/etharp.h"
-#include "lwip/inet.h"
 #include "netif/ethernet.h"
 #include "lwip/stats.h"
-#include "lwip/prot/iana.h"
 
 #if !LWIP_STATS || !UDP_STATS || !MEMP_STATS || !ETHARP_STATS
 #error "This tests needs UDP-, MEMP- and ETHARP-statistics enabled"
@@ -91,7 +89,7 @@ create_arp_response(ip4_addr_t *adr)
   ethhdr->src = test_ethaddr2;
   ethhdr->type = htons(ETHTYPE_ARP);
 
-  etharphdr->hwtype = htons(LWIP_IANA_HWTYPE_ETHERNET);
+  etharphdr->hwtype = htons(/*HWTYPE_ETHERNET*/ 1);
   etharphdr->proto = htons(ETHTYPE_IP);
   etharphdr->hwlen = ETHARP_HWADDR_LEN;
   etharphdr->protolen = sizeof(ip4_addr_t);
@@ -121,7 +119,6 @@ etharp_setup(void)
 {
   etharp_remove_all();
   default_netif_add();
-  lwip_check_ensure_no_alloc(SKIP_POOL(MEMP_SYS_TIMEOUT));
 }
 
 static void
@@ -129,7 +126,6 @@ etharp_teardown(void)
 {
   etharp_remove_all();
   default_netif_remove();
-  lwip_check_ensure_no_alloc(SKIP_POOL(MEMP_SYS_TIMEOUT));
 }
 
 
@@ -140,7 +136,7 @@ START_TEST(test_etharp_table)
 #if ETHARP_SUPPORT_STATIC_ENTRIES
   err_t err;
 #endif /* ETHARP_SUPPORT_STATIC_ENTRIES */
-  ssize_t idx;
+  s8_t idx;
   const ip4_addr_t *unused_ipaddr;
   struct eth_addr *unused_ethaddr;
   struct udp_pcb* pcb;

@@ -3,17 +3,12 @@
 #include "lwip/priv/tcp_priv.h"
 #include "lwip/stats.h"
 #include "lwip/pbuf.h"
-#include "lwip/inet.h"
 #include "lwip/inet_chksum.h"
 #include "lwip/ip_addr.h"
 
 #if !LWIP_STATS || !TCP_STATS || !MEMP_STATS
 #error "This tests needs TCP- and MEMP-statistics enabled"
 #endif
-
-const ip_addr_t test_local_ip = IPADDR4_INIT_BYTES(192, 168, 1, 1);
-const ip_addr_t test_remote_ip = IPADDR4_INIT_BYTES(192, 168, 1, 2);
-const ip_addr_t test_netmask = IPADDR4_INIT_BYTES(255, 255, 255, 0);
 
 /** Remove all pcbs on the given list. */
 static void
@@ -34,7 +29,6 @@ void
 tcp_remove_all(void)
 {
   tcp_remove(tcp_listen_pcbs.pcbs);
-  tcp_remove(tcp_bound_pcbs);
   tcp_remove(tcp_active_pcbs);
   tcp_remove(tcp_tw_pcbs);
   fail_unless(MEMP_STATS_GET(used, MEMP_TCP_PCB) == 0);
@@ -144,8 +138,8 @@ struct pbuf* tcp_create_rx_segment_wnd(struct tcp_pcb* pcb, void* data, size_t d
 
 /** Safely bring a tcp_pcb into the requested state */
 void
-tcp_set_state(struct tcp_pcb* pcb, enum tcp_state state, const ip_addr_t* local_ip,
-                   const ip_addr_t* remote_ip, u16_t local_port, u16_t remote_port)
+tcp_set_state(struct tcp_pcb* pcb, enum tcp_state state, ip_addr_t* local_ip,
+                   ip_addr_t* remote_ip, u16_t local_port, u16_t remote_port)
 {
   u32_t iss;
 
@@ -298,7 +292,7 @@ static err_t test_tcp_netif_output(struct netif *netif, struct pbuf *p,
 }
 
 void test_tcp_init_netif(struct netif *netif, struct test_tcp_txcounters *txcounters,
-                         const ip_addr_t *ip_addr, const ip_addr_t *netmask)
+                         ip_addr_t *ip_addr, ip_addr_t *netmask)
 {
   struct netif *n;
   memset(netif, 0, sizeof(struct netif));
